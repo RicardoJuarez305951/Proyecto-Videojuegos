@@ -27,6 +27,10 @@ string modeloNombre[] = {
     "Obstaculos/obstaculoMuro2.obj"
 };
 
+string escenario[] = {
+    "Obstaculos/escenario.obj"
+};
+
 int expan[] = {
     0
 };

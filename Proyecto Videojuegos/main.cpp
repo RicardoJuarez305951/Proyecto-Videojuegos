@@ -59,7 +59,8 @@ int main()
     Shader ourShader("vertexShader.vs", "fragmenShader.fs");
     Shader ourShaderSky("vertexShaderSky.vs", "fragmenShaderSky.fs");
 
-    Model ourModel(modeloNombre[0]);
+    //Model ourModel(modeloNombre[0]);
+    Model ourModel(escenario[0]);
 
     Textura ourTexture(texture, limite);
     Textura ourTextureSky(textureSky);
