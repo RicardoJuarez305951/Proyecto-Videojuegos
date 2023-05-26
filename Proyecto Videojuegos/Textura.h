@@ -3,19 +3,19 @@
 
 #include "libraries.h"
 
-class Texture 
+class Textura 
 {
 public:
     int limite;
     unsigned int texture[1];
     unsigned int textureSky;
 
-    Texture()
+    Textura()
     {
 
     }
 
-    Texture(unsigned int ourTexture[], int ourLimit)
+    Textura(unsigned int ourTexture[], int ourLimit)
     {
         limite = ourLimit;
         for (int i = 0; i < limite; i++)
@@ -24,7 +24,7 @@ public:
         }
     }
 
-    Texture(unsigned int ourTextureSky)
+    Textura(unsigned int ourTextureSky)
     {
         textureSky = ourTextureSky;
     }
@@ -120,7 +120,7 @@ public:
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
     }
 
-    void ViewTexture()
+    void ViewTextura()
     {
         for (int i = 0; i < limite; i++)
         {
@@ -129,14 +129,14 @@ public:
         }
     }
     
-    void ViewTextureSKY()
+    void ViewTexturaSKY()
     {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, textureSky);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
     }
 
-    string UniformTexture()
+    string UniformTextura()
     {
         string completo = "";
         string str = "texture";
@@ -155,7 +155,7 @@ public:
         return completo;
     }
 
-    string UniformTextureSky()
+    string UniformTexturaSky()
     {
         string str = "skybox";
         return str;

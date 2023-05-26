@@ -57,10 +57,10 @@
     <ClInclude Include="Variables.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
-    <ClInclude Include="Texture.h">
+    <ClInclude Include="SkyBoxVertex.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
-    <ClInclude Include="SkyBoxVertex.h">
+    <ClInclude Include="Textura.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
   </ItemGroup>

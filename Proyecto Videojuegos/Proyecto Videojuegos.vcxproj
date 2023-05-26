@@ -165,7 +165,7 @@
     <ClInclude Include="Shader.h" />
     <ClInclude Include="SkyBoxVertex.h" />
     <ClInclude Include="stb_image.h" />
-    <ClInclude Include="Texture.h" />
+    <ClInclude Include="Textura.h" />
     <ClInclude Include="Variables.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

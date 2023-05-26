@@ -4,13 +4,15 @@
 #include "Variables.h"
 #include "Cubo.h"
 #include "SkyBoxVertex.h"
+#include "Model.h"
 
 #include "Shader.h"
-#include "Texture.h"
+#include "Textura.h"
 
 void initGLFWVersion();
 bool gladLoad();
-void updateWindow(GLFWwindow* window, Shader ourShader, Texture ourTexture, Shader ourShaderSky, Texture ourTextureSky);
+void updateWindow(GLFWwindow* window, Shader ourShader, Textura ourTexture, Shader ourShaderSky, Textura ourTextureSky);
+void updateWindow2(GLFWwindow* window, Shader ourShader, Model ourModel, Shader ourShaderSky, Textura ourTextureSky);
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -22,7 +24,9 @@ void GeneracionBufferSky();
 void VertexAttribute(int layout, int data, int total, int start);
 
 void TransformacionObjeto(Shader ourShader);
+void TransformacionObjeto(Shader ourShader, Model ourModel, vec3 poseModel);
 void CameraTransform(Shader ourShader, bool isSky);
+void illumination(Shader ourShader);
 
 int main()
 {
@@ -55,8 +59,10 @@ int main()
     Shader ourShader("vertexShader.vs", "fragmenShader.fs");
     Shader ourShaderSky("vertexShaderSky.vs", "fragmenShaderSky.fs");
 
-    Texture ourTexture(texture, limite);
-    Texture ourTextureSky(textureSky);
+    Model ourModel(modeloNombre[0]);
+
+    Textura ourTexture(texture, limite);
+    Textura ourTextureSky(textureSky);
 
     GeneracionBuffer();
     
@@ -65,6 +71,7 @@ int main()
     for (int i = 0; i < limite; i++)
     {
         ourTexture.GeneraTextura(texture[i], nombre[i], expan[i]);
+        //ourTexture.GeneraTextura(texture[i], modeloNombre[i], expan[i]);
     }
 
     if (limite > 1)
@@ -72,7 +79,7 @@ int main()
         ourShader.use();
         for (int i = 0; i < limite; i++)
         {
-           ourShader.setInt(ourTexture.UniformTexture(), i);
+           ourShader.setInt(ourTexture.UniformTextura(), i);
         }
     }
 
@@ -80,9 +87,12 @@ int main()
     GeneracionBufferSky();
     ourTextureSky.GeneraTexturaSky(faces);
     ourShaderSky.use();
-    ourShaderSky.setInt(ourTextureSky.UniformTextureSky(), 0);
+    ourShaderSky.setInt(ourTextureSky.UniformTexturaSky(), 0);
 
-    updateWindow(window, ourShader, ourTexture, ourShaderSky, ourTextureSky);
+    
+    
+    //updateWindow(window, ourShader, ourTexture, ourShaderSky, ourTextureSky);
+    updateWindow2(window, ourShader, ourModel, ourShaderSky, ourTextureSky);
 
     //Model
     glDeleteVertexArrays(1, &VAO);
@@ -120,7 +130,7 @@ bool gladLoad()
     }
     return active;
 }
-void updateWindow(GLFWwindow* window, Shader ourShader, Texture ourTexture, Shader ourShaderSky, Texture ourTextureSky)
+void updateWindow(GLFWwindow* window, Shader ourShader, Textura ourTexture, Shader ourShaderSky, Textura ourTextureSky)
 {
     while (!glfwWindowShouldClose(window))
     {
@@ -137,7 +147,7 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Texture ourTexture, Shad
         ourShader.use();
         CameraTransform(ourShader, false);
         glBindVertexArray(VAO);
-        ourTexture.ViewTexture();
+        ourTexture.ViewTextura();
         TransformacionObjeto(ourShader);
 
         //SKY
@@ -145,10 +155,52 @@ void updateWindow(GLFWwindow* window, Shader ourShader, Texture ourTexture, Shad
         ourShaderSky.use();
         CameraTransform(ourShaderSky, true);
         glBindVertexArray(VAOSKY);
-        ourTextureSky.ViewTextureSKY();
+        ourTextureSky.ViewTexturaSKY();
         glDepthFunc(GL_LESS);
        
         
+        if (poly)
+        {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        }
+
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+}
+
+void updateWindow2(GLFWwindow* window, Shader ourShader, Model ourModel, Shader ourShaderSky, Textura ourTextureSky)
+{
+    while (!glfwWindowShouldClose(window))
+    {
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
+        processInput(window);
+
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        
+
+        //Model
+        ourShader.use();
+        illumination(ourShader);
+        CameraTransform(ourShader, false);
+        glBindVertexArray(VAO);
+        //ourModel.ViewTextura();
+        TransformacionObjeto(ourShader, ourModel, vec3(0.0f,0.0f,0.0f));
+
+        //SKY
+        glDepthFunc(GL_LEQUAL);
+        ourShaderSky.use();
+        CameraTransform(ourShaderSky, true);
+        glBindVertexArray(VAOSKY);
+        ourTextureSky.ViewTexturaSKY();
+        glDepthFunc(GL_LESS);
+
+
         if (poly)
         {
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -280,9 +332,18 @@ void CameraTransform(Shader ourShader, bool isSky)
     ourShader.setMat4("view", view);
 }
 
+void TransformacionObjeto(Shader ourShader, Model ourModel, vec3 poseModel)
+{
+    mat4 model = mat4(1.0f);
+    model = translate(model, poseModel);
+    model = scale(model, vec3(1.0f, 1.0f, 1.0f));
+    ourShader.setMat4("model", model);
+    ourModel.Draw(ourShader);
+}
+
 void TransformacionObjeto(Shader ourShader)
 {
-    bool one = true;
+    bool one = false;
     int n = 10;
 
     if (one)
@@ -306,4 +367,48 @@ void TransformacionObjeto(Shader ourShader)
             glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
         }
     }
+}
+
+void illumination(Shader ourShader)
+{
+
+    ourShader.setVec3("viewPos", camera.Position);
+
+    //Directional
+    ourShader.setVec3("dirLight.ambient", 0.1f, 0.1f, 0.1f);
+    ourShader.setVec3("dirLight.diffuse", 0.8f, 0.8f, 0.8f);
+    ourShader.setVec3("dirLight.specular", 1.0f, 1.0f, 1.0f);
+    ourShader.setVec3("dirLight.direction", lightDirect);
+
+    //Point
+    for (int i = 0; i < totalP; ++i) {
+        string i_str = to_string(i);
+        ourShader.setVec3("pointLights[" + i_str + "].ambient", 0.05f, 0.05f, 0.05f);
+        ourShader.setVec3("pointLights[" + i_str + "].diffuse", 0.8f, 0.8f, 0.8f);
+        ourShader.setVec3("pointLights[" + i_str + "].specular", 1.0f, 1.0f, 1.0f);
+        ourShader.setVec3("pointLights[" + i_str + "].pose", pointLightPositions[i]);
+        ourShader.setFloat("pointLights[" + i_str + "].constant", constantV);
+        ourShader.setFloat("pointLights[" + i_str + "].linear", linearV);
+        ourShader.setFloat("pointLights[" + i_str + "].quadratic", quadraticV);
+    }
+
+    //Spot
+    if (attached)
+    {
+        ourShader.setVec3("spotLight.pose", camera.Position);
+        ourShader.setVec3("spotLight.direction", camera.Front);
+    }
+    else
+    {
+        ourShader.setVec3("spotLight.pose", droppedPos);
+        ourShader.setVec3("spotLight.direction", droppedDir);
+    }
+    ourShader.setVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
+    ourShader.setVec3("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
+    ourShader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
+    ourShader.setFloat("spotLight.constant", constantV);
+    ourShader.setFloat("spotLight.linear", linearV);
+    ourShader.setFloat("spotLight.quadratic", quadraticV);
+    ourShader.setFloat("spotLight.cutOff", cos(radians(cutOffValue)));
+    ourShader.setFloat("spotLight.outerCutOff", cos(radians(outerCutOffValue)));
 }
